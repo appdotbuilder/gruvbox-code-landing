@@ -1,11 +1,23 @@
+import { db } from '../db';
+import { coursesTable, categoriesTable } from '../db/schema';
 import { type CreateCourseInput, type Course } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function createCourse(input: CreateCourseInput): Promise<Course> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to create a new course with proper validation
-    // and persist it in the database, linking it to the specified category.
-    return {
-        id: 0, // Placeholder ID
+export const createCourse = async (input: CreateCourseInput): Promise<Course> => {
+  try {
+    // First, verify that the category exists to prevent foreign key constraint violations
+    const existingCategory = await db.select()
+      .from(categoriesTable)
+      .where(eq(categoriesTable.id, input.category_id))
+      .execute();
+
+    if (existingCategory.length === 0) {
+      throw new Error(`Category with id ${input.category_id} does not exist`);
+    }
+
+    // Insert course record
+    const result = await db.insert(coursesTable)
+      .values({
         category_id: input.category_id,
         title: input.title,
         slug: input.slug,
@@ -16,8 +28,14 @@ export async function createCourse(input: CreateCourseInput): Promise<Course> {
         estimated_duration: input.estimated_duration,
         is_featured: input.is_featured,
         is_published: input.is_published,
-        thumbnail_url: input.thumbnail_url,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Course;
-}
+        thumbnail_url: input.thumbnail_url
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Course creation failed:', error);
+    throw error;
+  }
+};

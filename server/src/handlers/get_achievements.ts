@@ -1,9 +1,20 @@
+import { db } from '../db';
+import { achievementsTable } from '../db/schema';
 import { type Achievement } from '../schema';
+import { eq, desc } from 'drizzle-orm';
 
 export async function getAchievements(): Promise<Achievement[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to fetch active achievements for showcasing
-    // gamification elements on the landing page.
-    // Should return a sample of diverse achievements across different categories.
-    return [];
+  try {
+    // Fetch all active achievements, ordered by points_required descending
+    const results = await db.select()
+      .from(achievementsTable)
+      .where(eq(achievementsTable.is_active, true))
+      .orderBy(desc(achievementsTable.points_required))
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Failed to fetch achievements:', error);
+    throw error;
+  }
 }

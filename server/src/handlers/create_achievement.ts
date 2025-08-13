@@ -1,18 +1,28 @@
+import { db } from '../db';
+import { achievementsTable } from '../db/schema';
 import { type CreateAchievementInput, type Achievement } from '../schema';
 
-export async function createAchievement(input: CreateAchievementInput): Promise<Achievement> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to create a new achievement for the gamification system
-    // and persist it in the database with proper validation.
-    return {
-        id: 0, // Placeholder ID
+export const createAchievement = async (input: CreateAchievementInput): Promise<Achievement> => {
+  try {
+    // Insert achievement record
+    const result = await db.insert(achievementsTable)
+      .values({
         name: input.name,
         description: input.description,
         icon: input.icon,
         badge_color: input.badge_color,
         points_required: input.points_required,
         category: input.category,
-        is_active: input.is_active,
-        created_at: new Date()
-    } as Achievement;
-}
+        is_active: input.is_active
+      })
+      .returning()
+      .execute();
+
+    // Return the created achievement
+    const achievement = result[0];
+    return achievement;
+  } catch (error) {
+    console.error('Achievement creation failed:', error);
+    throw error;
+  }
+};

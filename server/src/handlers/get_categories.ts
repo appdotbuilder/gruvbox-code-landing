@@ -1,9 +1,18 @@
+import { db } from '../db';
+import { categoriesTable } from '../db/schema';
 import { type Category } from '../schema';
+import { asc } from 'drizzle-orm';
 
 export async function getCategories(): Promise<Category[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to fetch all active course categories
-    // for display in the landing page categories section.
-    // Should return categories ordered by name or display order.
-    return [];
+  try {
+    const results = await db.select()
+      .from(categoriesTable)
+      .orderBy(asc(categoriesTable.name))
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+    throw error;
+  }
 }
